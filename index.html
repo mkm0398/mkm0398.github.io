@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Be My Valentine?</title>
+  <meta name="description" content="A playful valentine page with a dodging 'No' button." />
+  <style>
+    :root {
+      --bg1: #ffdde1;
+      --bg2: #ee9ca7;
+      --card: rgba(255,255,255,.85);
+      --text: #2b2b2b;
+      --yes: #ff2d55;
+      --yes-hover: #e3264a;
+      --no: #3a3a3a;
+      --shadow: 0 12px 40px rgba(0,0,0,.18);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 700px at 15% 10%, var(--bg1), transparent 60%),
+                  radial-gradient(1200px 700px at 85% 90%, var(--bg2), transparent 60%),
+                  linear-gradient(135deg, #ffd1dc, #fbc2eb);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .hearts {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .16;
+      background-image:
+        radial-gradient(circle at 10% 20%, #ff2d55 0 2px, transparent 3px),
+        radial-gradient(circle at 30% 80%, #ff2d55 0 2px, transparent 3px),
+        radial-gradient(circle at 70% 30%, #ff2d55 0 2px, transparent 3px),
+        radial-gradient(circle at 90% 70%, #ff2d55 0 2px, transparent 3px);
+      background-size: 220px 220px;
+      filter: blur(.2px);
+    }
+
+    .card {
+      width: min(720px, 92vw);
+      padding: clamp(22px, 4vw, 40px);
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.7);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      position: relative;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 5vw, 44px);
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      margin: 0 0 22px;
+      font-size: clamp(16px, 2.2vw, 18px);
+      line-height: 1.5;
+      opacity: .9;
+    }
+
+    .stage {
+      position: relative;
+      height: clamp(220px, 34vh, 320px);
+      border-radius: calc(var(--radius) - 6px);
+      background: rgba(255,255,255,.55);
+      border: 1px dashed rgba(0,0,0,.12);
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .buttons {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+      box-shadow: 0 10px 22px rgba(0,0,0,.14);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:active { transform: scale(.98); }
+
+    #yesBtn {
+      background: var(--yes);
+      color: white;
+      position: absolute;
+      left: 50%;
+      top: 55%;
+      transform: translate(-110%, -50%);
+    }
+    #yesBtn:hover { background: var(--yes-hover); }
+
+    #noBtn {
+      background: var(--no);
+      color: white;
+      position: absolute;
+      left: 50%;
+      top: 55%;
+      transform: translate(10%, -50%);
+    }
+
+    .result {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.65);
+      border: 1px solid rgba(0,0,0,.08);
+      display: none;
+      font-size: 16px;
+    }
+
+    .footer {
+      margin-top: 18px;
+      font-size: 13px;
+      opacity: .7;
+    }
+
+    .sparkle {
+      display: inline-block;
+      animation: pop 900ms ease-in-out infinite;
+    }
+    @keyframes pop {
+      0%, 100% { transform: translateY(0) rotate(0); }
+      50% { transform: translateY(-2px) rotate(-6deg); }
+    }
+
+    /* Accessibility: if user prefers reduced motion, don't animate or dodge too aggressively */
+    @media (prefers-reduced-motion: reduce) {
+      .sparkle { animation: none; }
+      button { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hearts" aria-hidden="true"></div>
+
+  <main class="card" role="main">
+    <h1>Will you be my Valentine? <span class="sparkle">💘</span></h1>
+    <p>
+      I have a very important question for the most amazing person in my world.
+      Click your answer below.
+    </p>
+
+    <section class="stage" aria-label="Valentine buttons area">
+      <div class="buttons" id="stage">
+        <button id="yesBtn" type="button">Yes 💞</button>
+        <button id="noBtn" type="button" aria-label="No (this button will dodge!)">No 😅</button>
+      </div>
+    </section>
+
+    <div class="result" id="result" role="status" aria-live="polite"></div>
+
+    <div class="footer">
+      Tip: Works best on mobile too. If the “No” button is extra slippery, that’s on purpose 😉
+    </div>
+  </main>
+
+  <script>
+    const stage = document.getElementById('stage');
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn  = document.getElementById('noBtn');
+    const result = document.getElementById('result');
+
+    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+    function moveNoButton() {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const stageRect = stage.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
+
+      // Available area inside the stage
+      const padding = 12;
+      const maxX = stageRect.width - btnRect.width - padding;
+      const maxY = stageRect.height - btnRect.height - padding;
+
+      // Random position (avoid clustering near edges)
+      let x = Math.random() * maxX;
+      let y = Math.random() * maxY;
+
+      x = clamp(x, padding, maxX);
+      y = clamp(y, padding, maxY);
+
+      // Place with translate disabled, using left/top
+      noBtn.style.transform = 'none';
+      noBtn.style.left = `${x}px`;
+      noBtn.style.top  = `${y}px`;
+
+      if (!prefersReducedMotion) {
+        noBtn.animate(
+          [
+            { transform: 'scale(1)' },
+            { transform: 'scale(1.04)' },
+            { transform: 'scale(1)' }
+          ],
+          { duration: 220, iterations: 1 }
+        );
+      }
+    }
+
+    function showMessage(html) {
+      result.style.display = 'block';
+      result.innerHTML = html;
+    }
+
+    // Start: ensure "No" is positioned using left/top so it can move freely.
+    // Keep "Yes" centered-ish.
+    // Convert initial "No" position from its CSS transform positioning to left/top.
+    window.addEventListener('load', () => {
+      // Force layout then move once so it's set up.
+      moveNoButton();
+    });
+
+    // Mouse/touch proximity: move away before it can be clicked.
+    // - on desktop: mouseenter is enough
+    // - on mobile: touchstart on the button, plus pointerover
+    noBtn.addEventListener('mouseenter', moveNoButton);
+    noBtn.addEventListener('pointerover', moveNoButton);
+    noBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      moveNoButton();
+    }, { passive: false });
+
+    // If somehow clicked, also dodge and do nothing.
+    noBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      moveNoButton();
+    });
+
+    yesBtn.addEventListener('click', () => {
+      showMessage(
+        `YAY!!! 💖💖💖<br><br>
+         Okay it’s official — you’re my Valentine!<br>
+         Text me your dream date plan 🥰`
+      );
+
+      // Optional: hide the "No" button after yes
+      noBtn.style.display = 'none';
+      yesBtn.textContent = 'Valentine confirmed 💘';
+      yesBtn.disabled = true;
+      yesBtn.style.opacity = '0.9';
+      yesBtn.style.cursor = 'default';
+    });
+
+    // Keep button inside stage on resize/orientation changes
+    window.addEventListener('resize', () => {
+      if (noBtn.style.display !== 'none') moveNoButton();
+    });
+  </script>
+</body>
+</html>
